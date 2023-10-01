@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('Z:/private/Marie/Image Analysis/2023-08-15-Zen-practice/FD-FD-data/exp7-01_Dead.csv')
+df = pd.read_csv('Z:/private/Marie/Image Analysis/2023-08-15-Zen-practice/FD-FD-data/experiment 10wProteaseinhibs_Dead.csv')
 df_column_names = list(df.columns.values)
 
 
@@ -89,13 +89,13 @@ for n in range(len(well_rows)): #well rows
         pivot_count.plot(x='Image Index Time', y=well_name[x], ax=axes_count[n,m],legend=None)
         x = x + 1
 
-fig.suptitle('Exp 7 - Dead cells average convexity')
-fig_count.suptitle('Exp 7 - Dead cells count')
+fig.suptitle('Exp 10 - Dead cells average convexity')
+fig_count.suptitle('Exp 10 - Dead cells count')
 
-fig.savefig('Z:/private/Marie/Image Analysis/2023-08-15-Zen-practice/FD-FD-data/average.png')
-fig_count.savefig('Z:/private/Marie/Image Analysis/2023-08-15-Zen-practice/FD-FD-data/count.png')
+fig.savefig('Z:/private/Marie/Image Analysis/2023-08-15-Zen-practice/FD-FD-data/exp-10-convexity-average.png')
+fig_count.savefig('Z:/private/Marie/Image Analysis/2023-08-15-Zen-practice/FD-FD-data/exp-10-count.png')
 
 
 print('Done! Deal with it any which way you like. Plotting takes time so be patient!')
 
-  
+plt.show()
