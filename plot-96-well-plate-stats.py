@@ -337,5 +337,5 @@ axes[7, 11].set(title='H12')
 
 fig.suptitle('Exp 7 - Dead cell area percentage')
 
-
+plt.show()
 print("Done!")
