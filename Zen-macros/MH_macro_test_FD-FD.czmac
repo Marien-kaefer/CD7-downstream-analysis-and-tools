@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Script>
+  <Context>Zen26</Context>
+  <Version>1.0</Version>
+  <Language>Python</Language>
+  <Text>#Import Library
+from System.IO import File, Directory, Path
+
+# Remove all open files
+Zen.Application.Documents.RemoveAll()
+
+# check analysis settings exist
+#doc = Zen.Application.Environment.GetFolderPath(ZenSpecialFolder.WorkgroupDocuments)   # did not work
+#measPath = Path.Combine(doc,'Image Analysis Settings')                                 # did not work
+measPath = 'D:\\zeiss\\Documents\\Carl Zeiss\\ZEN\\Documents\\Image Analysis Settings' #folder in which the image analysis pipeline is saved
+itype = '*.czias'
+iasName = 'FD-FD-live-dead-exp-7'
+
+files = Directory.GetFiles(measPath, itype)
+name = Path.Combine(measPath, iasName + '.czias')
+directory = 'D:\\SWAP\\Users\\FERNIG-FoulkesDan\\plate9isolatesscreenWproteases_data\\' 
+file = 'experiment 9wProteaseinhibs-01.czi'
+image_name = file.Substring(0,file.Length-4)
+directory_and_file = Path.Combine(directory, file)
+
+destPath = "D:\\SWAP\\Users\\FERNIG-FoulkesDan\\2025-02-07_analysis-results"
+
+def pre_processing(directory_and_file):
+    print('Starting Pre-processing')
+    raw_data = Zen.Application.LoadImage(directory_and_file)
+    image_name = raw_data.Name.Substring(0,raw_data.Name.Length-4)
+    
+    Zen.Application.Documents.Add(raw_data)
+    #split data set into fluorescence channels (1 &amp; 2) and oblique channel (3)
+    raw_fluo = Zen.Processing.Utilities.CreateSubset(raw_data, "C(1,2)", False)
+    #Zen.Application.Documents.Add(raw_fluo)
+    raw_oblique = Zen.Processing.Utilities.CreateSubset(raw_data, "C(3)", False,)
+    #Zen.Application.Documents.Add(raw_oblique)
+    
+    #run Background subtraction on fluorescence channels
+    BG_subtracted_fluo = Zen.Processing.Adjust.BackgroundSubtraction(raw_fluo, 30, False, False, False, False)
+    #Zen.Application.Documents.Add(BG_subtracted_fluo)
+    
+    
+    BG_fluo_oblique = Zen.Processing.Utilities.AddChannels(BG_subtracted_fluo, raw_oblique)
+    Zen.Application.Documents.Add(BG_fluo_oblique)
+    Zen.Application.Save(BG_fluo_oblique, directory + '\\' + image_name + '_processed.czi', False)
+    
+    #close intermediate files
+    raw_data.Close()
+    raw_fluo.Close()
+    raw_oblique.Close()
+    BG_subtracted_fluo.Close()
+    print('Finished Pre-processing')
+    print('To be returned image name: ' + BG_fluo_oblique.Name)
+    return BG_fluo_oblique
+
+def analysis(BG_fluo_oblique, iasName, directory, image_name, destPath): 
+    print('Starting Analysis')
+    Zen.Application.Documents.GetByName(BG_fluo_oblique.Name)
+    
+    imageanalysissetting = ZenImageAnalysisSetting()
+    imageanalysissetting.Load(iasName)
+    Zen.Analyzing.Analyze(BG_fluo_oblique, imageanalysissetting)
+    Zen.Application.Save(BG_fluo_oblique, directory + '\\' + image_name + '_processed.czi', False)
+    
+    ## Create data list with population statistics results for all regions
+    StatsTable = Zen.Analyzing.CreateRegionsTable(BG_fluo_oblique)
+    #Zen.Application.Documents.Add(StatsTable)
+    ## Save regions data list automatically
+    StatsTableName = StatsTable.Name
+    regsFileName = Path.Combine(destPath,StatsTableName + '.csv')
+    StatsTable.Save(regsFileName)
+    StatsTable.Close()
+    
+    ## Create data list with individual results for all regions
+    IndivTable = Zen.Analyzing.CreateRegionTable(BG_fluo_oblique)
+    #Zen.Application.Documents.Add(IndivTable)
+    ## Save regions data list automatically
+    IndivTableName = IndivTable.Name
+    regsFileName = Path.Combine(destPath,IndivTableName + '.csv')
+    IndivTable.Save(regsFileName)    
+    IndivTable.Close()
+    #BG_fluo_oblique.Close()
+    print('Finished Analysis')
+
+if File.Exists(name) == True:
+
+    BG_fluo_oblique = pre_processing(directory_and_file)
+    print('Returned image name: ' + BG_fluo_oblique.Name)
+    analysis(BG_fluo_oblique, iasName, directory, image_name, destPath)
+    
+    Zen.Application.Pause('Done processing.')
+else:
+    Zen.Application.Pause('Requires ' + iasName + '.czias. \n Please create the required analysis setting.')
+</Text>
+  <Author></Author>
+  <Description></Description>
+  <Keywords></Keywords>
+  <Row>17</Row>
+  <Column>39</Column>
+  <WatchVariables>
+    <Watch>BG_fluo_oblique</Watch>
+  </WatchVariables>
+</Script>
